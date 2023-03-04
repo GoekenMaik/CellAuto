@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <SDL2/SDL.h>
 #include <pthread.h>
+#include <semaphore.h>
 
 typedef struct updateTexture
 {
@@ -16,8 +17,10 @@ typedef struct sharedResource
     bool update;
     bool keepOpen;
     SDL_Rect *textureWindow;
-    pthread_mutex_t lock;
+    sem_t semUpdate;
+    sem_t semDraw;
     SDL_Surface *texData;
+    SDL_Texture *texture;
     int scale;
     int zoom;
     int calculated_x;

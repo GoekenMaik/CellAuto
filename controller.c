@@ -2,29 +2,31 @@
 
 int main(int argc, char *argv[])
 {
-
+    // Creating the model thread
     pthread_t modelThread;
-
+    shared.rule = 30;
     // Checking for rule input
     if (argc != 2)
     {
-        // Asking for rule
+        // if no rule is given, ask for one
         printf("Input Rule: ");
         scanf("%d", &shared.rule);
     }
     else
     {
+        // Using rule from command line
         shared.rule = atoi(argv[1]);
     }
 
-    if(shared.rule < 0 || shared.rule > 255)
+    if (shared.rule < 0 || shared.rule > 255)
     {
+        // Checking if rule is between 0 and 255
         printf("Rule must be between 0 and 255");
         return 0;
     }
-    
+
+    // Starting the program, initializing shared resource and creating the model thread
     startup();
-    pthread_mutex_lock(&shared.lock);
     pthread_create(&modelThread, NULL, (void *)model, NULL);
     windowManager();
 }
@@ -32,13 +34,13 @@ int main(int argc, char *argv[])
 void startup()
 {
     //  Setting up shared resource with default values
-    shared.update = false;
     shared.window_size_x = RESOLUTION_X;
     shared.window_size_y = RESOLUTION_Y;
     shared.scale = SCALE;
     shared.zoom = 1;
     shared.keepOpen = true;
-    pthread_mutex_init(&shared.lock, NULL);
+    sem_init(&shared.semUpdate, 0, 1);
+    sem_init(&shared.semDraw, 0, 0);
     shared.textureWindow = malloc(sizeof(SDL_Rect));
     shared.textureWindow->x = (shared.scale * shared.window_size_x) / 2 - ((shared.window_size_x) / shared.zoom / 2);
     shared.textureWindow->y = 0;
@@ -68,6 +70,13 @@ void inputLoop()
         }
         else if (event.type == SDL_MOUSEMOTION && left_button_down)
         {
+            if (shared.update)
+            {
+                tmp_x = shared.textureWindow->x;
+                tmp_y = shared.textureWindow->y;
+                //left_button_down = false;
+                continue;
+            }
             tmp_x -= (event.motion.x - mouse_x) / shared.zoom;
             tmp_y -= (event.motion.y - mouse_y) / shared.zoom;
             shared.textureWindow->x = tmp_x;
@@ -76,6 +85,7 @@ void inputLoop()
             mouse_y = event.motion.y;
             if (shared.textureWindow->y < 0)
                 shared.textureWindow->y = 0;
+
             checkWindowPos();
             continue;
         }
@@ -201,12 +211,12 @@ void resizeWindow(int newWidth, int newHeight)
 void checkWindowPos()
 {
     // check if the window is out of bounds, if so, move it back in
-    if (shared.textureWindow->x < 0)
-        shared.textureWindow->x = 0;
+    if (shared.textureWindow->x < shared.calculated_x / 4)
+        shared.textureWindow->x = shared.calculated_x / 4;
     if (shared.textureWindow->y < 0)
         shared.textureWindow->y = 0;
-    if (shared.textureWindow->x + shared.textureWindow->w > shared.calculated_x)
-        shared.textureWindow->x = shared.calculated_x - shared.textureWindow->w;
-    if (shared.textureWindow->y + shared.textureWindow->h > shared.calculated_y)
-        shared.textureWindow->y = shared.calculated_y - shared.textureWindow->h;
+    if (shared.textureWindow->x + shared.textureWindow->w > shared.calculated_x - shared.calculated_x / 4)
+        shared.textureWindow->x = shared.calculated_x - shared.textureWindow->w - shared.calculated_x / 4;
+    if (shared.textureWindow->y + shared.textureWindow->h > shared.calculated_x / 4)
+        shared.textureWindow->y = (shared.calculated_x / 4) - shared.textureWindow->h;
 }

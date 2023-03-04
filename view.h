@@ -3,13 +3,15 @@
 
 #include "sharedResource.h"
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include <unistd.h>
 #include <stdlib.h>
 
 extern sharedResource shared;
 SDL_Renderer *renderer;
 SDL_Window *window;
-SDL_Texture *texture;
+SDL_Surface* iconLoading;
+SDL_Texture *iconTexture;
 
 void windowManager();
 void init();
