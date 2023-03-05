@@ -42,7 +42,7 @@ no filter is used */
 
     // Create a renderer for the window
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    iconLoading = IMG_Load("loading.bmp");
+    iconLoading = IMG_Load("resource/loading.bmp");
     iconTexture = SDL_CreateTextureFromSurface(renderer, iconLoading);
 }
 
